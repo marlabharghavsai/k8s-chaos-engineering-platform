@@ -1,0 +1,21 @@
+apiVersion: chaos-mesh.org/v1alpha1
+kind: HTTPChaos
+metadata:
+  name: http-delay-api
+  namespace: chaos-mesh
+  labels:
+    app.kubernetes.io/part-of: chaos-engineering-platform
+    chaos.tier: ingress-gateway
+    experiment.type: http-chaos
+spec:
+  mode: all
+  selector:
+    namespaces:
+      - online-boutique
+    labelSelectors:
+      app: frontend
+  target: Request
+  port: 8080
+  path: '/cart'
+  delay: '500ms'
+  duration: 60s
