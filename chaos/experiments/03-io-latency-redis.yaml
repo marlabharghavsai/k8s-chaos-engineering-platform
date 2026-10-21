@@ -1,0 +1,22 @@
+apiVersion: chaos-mesh.org/v1alpha1
+kind: IOChaos
+metadata:
+  name: io-latency-redis
+  namespace: chaos-mesh
+  labels:
+    app.kubernetes.io/part-of: chaos-engineering-platform
+    chaos.tier: storage
+    experiment.type: io-chaos
+spec:
+  action: latency
+  mode: one
+  selector:
+    namespaces:
+      - online-boutique
+    labelSelectors:
+      app: redis-cart
+  volumePath: /data
+  path: '/data/**/*'
+  delay: '150ms'
+  percent: 75
+  duration: 60s
