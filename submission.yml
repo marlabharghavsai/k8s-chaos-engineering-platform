@@ -1,0 +1,60 @@
+version: "1.0"
+metadata:
+  project: "Chaos Engineering Platform with Chaos Mesh on Kubernetes"
+  platform: "Chaos Mesh v2.8.6 + Kubernetes v1.37 + Prometheus & Grafana"
+  description: "Automated resilience testing platform with hypothesis-driven failure injection, blast radius containment, and real-time observability."
+
+environment:
+  cluster_name: "chaos-cluster"
+  target_application: "Google Online Boutique (microservices-demo)"
+  target_namespace: "online-boutique"
+  chaos_namespace: "chaos-mesh"
+  monitoring_namespace: "monitoring"
+
+endpoints:
+  application_frontend: "http://localhost:30080"
+  chaos_dashboard: "http://localhost:2333"
+  prometheus: "http://localhost:9090"
+  grafana: "http://localhost:3000 (User: admin, Pass: admin)"
+
+commands:
+  setup:
+    description: "Provisions the Kind cluster with port forwards, deploys Chaos Mesh, provisions Prometheus & Grafana with preconfigured dashboards, and deploys Online Boutique."
+    powershell:
+      - "powershell -ExecutionPolicy Bypass -File ./scripts/setup-cluster.ps1"
+      - "powershell -ExecutionPolicy Bypass -File ./scripts/install-chaos-mesh.ps1"
+      - "powershell -ExecutionPolicy Bypass -File ./scripts/install-monitoring.ps1"
+      - "powershell -ExecutionPolicy Bypass -File ./scripts/deploy-application.ps1"
+      - "powershell -ExecutionPolicy Bypass -File ./scripts/preflight-check.ps1"
+    bash:
+      - "chmod +x scripts/*.sh"
+      - "./scripts/setup-cluster.sh"
+      - "./scripts/install-chaos-mesh.sh"
+      - "./scripts/install-monitoring.sh"
+      - "./scripts/deploy-application.sh"
+      - "./scripts/preflight-check.sh"
+
+  run_chaos_workflow:
+    description: "Executes automated pre-flight steady-state check and triggers the multi-stage cascading failure Chaos Workflow."
+    powershell:
+      - "powershell -ExecutionPolicy Bypass -File ./scripts/run-experiment.ps1 -Experiment workflow"
+    bash:
+      - "./scripts/run-experiment.sh workflow"
+
+  verify:
+    description: "Inspects status of the running Chaos Workflow, injected nodes, and application synthetic probe."
+    powershell:
+      - "kubectl get workflows -n chaos-mesh"
+      - "kubectl describe workflow cascading-failure-workflow -n chaos-mesh"
+      - "Invoke-WebRequest -Uri http://localhost:30080 -UseBasicParsing | Select-Object StatusCode, StatusDescription"
+    bash:
+      - "kubectl get workflows -n chaos-mesh"
+      - "kubectl describe workflow cascading-failure-workflow -n chaos-mesh"
+      - "curl -s -o /dev/null -w 'Frontend HTTP Status: %{http_code}\n' http://localhost:30080"
+
+  cleanup:
+    description: "Terminates all active chaos experiments and removes application and monitoring namespaces."
+    powershell:
+      - "powershell -ExecutionPolicy Bypass -File ./scripts/cleanup.ps1"
+    bash:
+      - "./scripts/cleanup.sh"
