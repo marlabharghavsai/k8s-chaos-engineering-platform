@@ -1,0 +1,85 @@
+apiVersion: chaos-mesh.org/v1alpha1
+kind: Workflow
+metadata:
+  name: cascading-failure-workflow
+  namespace: chaos-mesh
+  labels:
+    app.kubernetes.io/part-of: chaos-engineering-platform
+    workflow.type: multi-stage-cascading-failure
+spec:
+  entry: cascading-chaos-entry
+  templates:
+    - name: cascading-chaos-entry
+      templateType: Serial
+      deadline: 15m
+      children:
+        - stage-1-catalog-latency
+        - stage-2-parallel-faults
+        - stage-3-checkout-http-fault
+
+    - name: stage-1-catalog-latency
+      templateType: NetworkChaos
+      deadline: 45s
+      networkChaos:
+        action: delay
+        mode: all
+        selector:
+          namespaces:
+            - online-boutique
+          labelSelectors:
+            app: productcatalogservice
+        delay:
+          latency: '200ms'
+          jitter: '10ms'
+        direction: to
+
+    - name: stage-2-parallel-faults
+      templateType: Parallel
+      deadline: 60s
+      children:
+        - parallel-pod-kill-frontend
+        - parallel-cpu-stress-frontend
+
+    - name: parallel-pod-kill-frontend
+      templateType: PodChaos
+      deadline: 45s
+      podChaos:
+        action: pod-kill
+        mode: one
+        selector:
+          namespaces:
+            - online-boutique
+          labelSelectors:
+            app: frontend
+
+    - name: parallel-cpu-stress-frontend
+      templateType: StressChaos
+      deadline: 45s
+      stressChaos:
+        mode: one
+        selector:
+          namespaces:
+            - online-boutique
+          labelSelectors:
+            app: frontend
+        stressors:
+          cpu:
+            workers: 1
+            load: 80
+
+    - name: stage-3-checkout-http-fault
+      templateType: HTTPChaos
+      deadline: 45s
+      httpChaos:
+        mode: all
+        selector:
+          namespaces:
+            - online-boutique
+          labelSelectors:
+            app: frontend
+        target: Response
+        port: 8080
+        path: '/cart/checkout'
+        replace:
+          code: 500
+          body: 'eyJlcnJvciI6ICJDYXNjYWRpbmcgb3V0YWdlIHVwc3RyZWFtIGRlcGVuZGVuY3kgZmFpbHVyZSJ9'
