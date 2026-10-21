@@ -1,0 +1,21 @@
+apiVersion: chaos-mesh.org/v1alpha1
+kind: Schedule
+metadata:
+  name: nightly-pod-kill-schedule
+  namespace: chaos-mesh
+  labels:
+    app.kubernetes.io/part-of: chaos-engineering-platform
+    schedule.type: automated-nightly-resilience
+spec:
+  schedule: '0 2 * * *'
+  type: 'PodChaos'
+  concurrencyPolicy: 'Forbid'
+  historyLimit: 5
+  podChaos:
+    action: 'pod-kill'
+    mode: 'one'
+    selector:
+      namespaces:
+        - online-boutique
+      labelSelectors:
+        app: frontend
