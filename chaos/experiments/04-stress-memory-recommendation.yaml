@@ -1,0 +1,24 @@
+apiVersion: chaos-mesh.org/v1alpha1
+kind: StressChaos
+metadata:
+  name: stress-memory-recommendation
+  namespace: chaos-mesh
+  labels:
+    app.kubernetes.io/part-of: chaos-engineering-platform
+    chaos.tier: ml-engine
+    experiment.type: stress-chaos
+spec:
+  mode: one
+  selector:
+    namespaces:
+      - online-boutique
+    labelSelectors:
+      app: recommendationservice
+  stressors:
+    memory:
+      workers: 1
+      size: '256MB'
+      options:
+        - '--vm 1'
+        - '--vm-bytes 256M'
+  duration: 60s
