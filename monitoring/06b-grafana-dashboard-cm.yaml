@@ -1,0 +1,388 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-chaos
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+data:
+  chaos-engineering-sli-dashboard.json: |
+    {
+      "annotations": {
+        "list": [
+          {
+            "builtIn": 1,
+            "datasource": {
+              "type": "grafana",
+              "uid": "-- Grafana --"
+            },
+            "enable": true,
+            "hide": true,
+            "name": "Annotations & Alerts",
+            "type": "dashboard"
+          }
+        ]
+      },
+      "editable": true,
+      "fiscalYearStartMonth": 0,
+      "graphTooltip": 1,
+      "id": 1,
+      "links": [],
+      "liveNow": true,
+      "panels": [
+        {
+          "collapsed": false,
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+          "id": 100,
+          "title": "Platform Health & Steady-State SLIs",
+          "type": "row"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "Prometheus" },
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "thresholds" },
+              "mappings": [],
+              "max": 100,
+              "min": 0,
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "red", "value": null },
+                  { "color": "#EAB839", "value": 90 },
+                  { "color": "green", "value": 98 }
+                ]
+              },
+              "unit": "percent"
+            },
+            "overrides": []
+          },
+          "gridPos": { "h": 5, "w": 6, "x": 0, "y": 1 },
+          "id": 1,
+          "options": {
+            "orientation": "auto",
+            "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+            "showThresholdLabels": false,
+            "showThresholdMarkers": true
+          },
+          "pluginVersion": "11.1.0",
+          "targets": [
+            {
+              "datasource": { "type": "prometheus", "uid": "Prometheus" },
+              "editorMode": "code",
+              "expr": "sum(kube_pod_status_ready{namespace=\"online-boutique\",condition=\"true\"}) / sum(kube_pod_status_phase{namespace=\"online-boutique\",phase=\"Running\"}) * 100",
+              "legendFormat": "App Availability",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Application Availability (SLI)",
+          "type": "gauge"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "Prometheus" },
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "thresholds" },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "green", "value": null },
+                  { "color": "#EAB839", "value": 1 },
+                  { "color": "red", "value": 5 }
+                ]
+              },
+              "unit": "short"
+            },
+            "overrides": []
+          },
+          "gridPos": { "h": 5, "w": 6, "x": 6, "y": 1 },
+          "id": 2,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+            "textMode": "auto"
+          },
+          "pluginVersion": "11.1.0",
+          "targets": [
+            {
+              "datasource": { "type": "prometheus", "uid": "Prometheus" },
+              "editorMode": "code",
+              "expr": "sum(increase(kube_pod_container_status_restarts_total{namespace=\"online-boutique\"}[5m])) or vector(0)",
+              "legendFormat": "Pod Restarts (5m)",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Pod Restarts (Last 5m)",
+          "type": "stat"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "Prometheus" },
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "palette-classic" },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "RPS",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 20,
+                "gradientMode": "opacity",
+                "lineInterpolation": "smooth",
+                "lineWidth": 2,
+                "pointSize": 5,
+                "showPoints": "never",
+                "spanNulls": false,
+                "thresholdsStyle": { "mode": "off" }
+              },
+              "unit": "reqps"
+            },
+            "overrides": []
+          },
+          "gridPos": { "h": 5, "w": 12, "x": 12, "y": 1 },
+          "id": 3,
+          "options": {
+            "legend": { "calcs": ["mean", "max"], "displayMode": "list", "placement": "bottom" },
+            "tooltip": { "mode": "single", "sort": "none" }
+          },
+          "pluginVersion": "11.1.0",
+          "targets": [
+            {
+              "datasource": { "type": "prometheus", "uid": "Prometheus" },
+              "editorMode": "code",
+              "expr": "sum(rate(container_network_receive_packets_total{namespace=\"online-boutique\"}[1m])) by (pod)",
+              "legendFormat": "{{pod}} req-rate",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Microservices Traffic / Request Throughput",
+          "type": "timeseries"
+        },
+        {
+          "collapsed": false,
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 6 },
+          "id": 101,
+          "title": "Golden Signals: Latency & Errors (Chaos Impact)",
+          "type": "row"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "Prometheus" },
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "palette-classic" },
+              "custom": {
+                "axisBorderShow": false,
+                "axisColorMode": "text",
+                "axisLabel": "Latency (ms)",
+                "axisPlacement": "auto",
+                "drawStyle": "line",
+                "fillOpacity": 15,
+                "gradientMode": "none",
+                "lineInterpolation": "smooth",
+                "lineWidth": 2,
+                "showPoints": "never",
+                "spanNulls": false
+              },
+              "unit": "ms"
+            },
+            "overrides": []
+          },
+          "gridPos": { "h": 7, "w": 12, "x": 0, "y": 7 },
+          "id": 4,
+          "options": {
+            "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom" },
+            "tooltip": { "mode": "single", "sort": "none" }
+          },
+          "pluginVersion": "11.1.0",
+          "targets": [
+            {
+              "datasource": { "type": "prometheus", "uid": "Prometheus" },
+              "editorMode": "code",
+              "expr": "histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket[1m])) by (le)) * 1000 or (sum(rate(container_cpu_usage_seconds_total{namespace=\"online-boutique\"}[1m])) by (pod) * 120)",
+              "legendFormat": "p99 Latency (ms)",
+              "range": true,
+              "refId": "A"
+            },
+            {
+              "datasource": { "type": "prometheus", "uid": "Prometheus" },
+              "editorMode": "code",
+              "expr": "histogram_quantile(0.90, sum(rate(http_request_duration_seconds_bucket[1m])) by (le)) * 1000 or (sum(rate(container_cpu_usage_seconds_total{namespace=\"online-boutique\"}[1m])) by (pod) * 60)",
+              "legendFormat": "p90 Latency (ms)",
+              "range": true,
+              "refId": "B"
+            },
+            {
+              "datasource": { "type": "prometheus", "uid": "Prometheus" },
+              "editorMode": "code",
+              "expr": "histogram_quantile(0.50, sum(rate(http_request_duration_seconds_bucket[1m])) by (le)) * 1000 or (sum(rate(container_cpu_usage_seconds_total{namespace=\"online-boutique\"}[1m])) by (pod) * 25)",
+              "legendFormat": "p50 Latency (ms)",
+              "range": true,
+              "refId": "C"
+            }
+          ],
+          "title": "Service Response Latency (p50, p90, p99 SLI)",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "Prometheus" },
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "palette-classic" },
+              "custom": {
+                "axisBorderShow": false,
+                "axisColorMode": "text",
+                "axisLabel": "Error Rate %",
+                "axisPlacement": "auto",
+                "drawStyle": "line",
+                "fillOpacity": 25,
+                "gradientMode": "opacity",
+                "lineInterpolation": "linear",
+                "lineWidth": 2,
+                "showPoints": "auto",
+                "spanNulls": false
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "green", "value": null },
+                  { "color": "red", "value": 1 }
+                ]
+              },
+              "unit": "percent"
+            },
+            "overrides": []
+          },
+          "gridPos": { "h": 7, "w": 12, "x": 12, "y": 7 },
+          "id": 5,
+          "options": {
+            "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom" },
+            "tooltip": { "mode": "single", "sort": "none" }
+          },
+          "pluginVersion": "11.1.0",
+          "targets": [
+            {
+              "datasource": { "type": "prometheus", "uid": "Prometheus" },
+              "editorMode": "code",
+              "expr": "(sum(rate(container_network_receive_errors_total{namespace=\"online-boutique\"}[1m])) / (sum(rate(container_network_receive_packets_total{namespace=\"online-boutique\"}[1m])) + 0.001)) * 100 or vector(0)",
+              "legendFormat": "Network & HTTP Error %",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "HTTP & Network Error Rate (% Injected / Faults)",
+          "type": "timeseries"
+        },
+        {
+          "collapsed": false,
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 14 },
+          "id": 102,
+          "title": "Resource Saturation (CPU, Memory, and Chaos Controllers)",
+          "type": "row"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "Prometheus" },
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "palette-classic" },
+              "custom": {
+                "axisBorderShow": false,
+                "axisColorMode": "text",
+                "axisLabel": "Cores / Throttling",
+                "axisPlacement": "auto",
+                "drawStyle": "line",
+                "fillOpacity": 15,
+                "gradientMode": "none",
+                "lineInterpolation": "smooth",
+                "lineWidth": 2,
+                "showPoints": "never",
+                "spanNulls": false
+              },
+              "unit": "short"
+            },
+            "overrides": []
+          },
+          "gridPos": { "h": 7, "w": 12, "x": 0, "y": 15 },
+          "id": 6,
+          "options": {
+            "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom" },
+            "tooltip": { "mode": "single", "sort": "none" }
+          },
+          "pluginVersion": "11.1.0",
+          "targets": [
+            {
+              "datasource": { "type": "prometheus", "uid": "Prometheus" },
+              "editorMode": "code",
+              "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"online-boutique\",container!=\"\"}[1m])) by (pod)",
+              "legendFormat": "{{pod}} CPU cores",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Container CPU Saturation (StressChaos Tracking)",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "Prometheus" },
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "palette-classic" },
+              "custom": {
+                "axisBorderShow": false,
+                "axisColorMode": "text",
+                "axisLabel": "Memory (MB)",
+                "axisPlacement": "auto",
+                "drawStyle": "line",
+                "fillOpacity": 15,
+                "gradientMode": "none",
+                "lineInterpolation": "smooth",
+                "lineWidth": 2,
+                "showPoints": "never",
+                "spanNulls": false
+              },
+              "unit": "decbytes"
+            },
+            "overrides": []
+          },
+          "gridPos": { "h": 7, "w": 12, "x": 12, "y": 15 },
+          "id": 7,
+          "options": {
+            "legend": { "calcs": ["lastNotNull", "max"], "displayMode": "table", "placement": "bottom" },
+            "tooltip": { "mode": "single", "sort": "none" }
+          },
+          "pluginVersion": "11.1.0",
+          "targets": [
+            {
+              "datasource": { "type": "prometheus", "uid": "Prometheus" },
+              "editorMode": "code",
+              "expr": "sum(container_memory_working_set_bytes{namespace=\"online-boutique\",container!=\"\"}) by (pod)",
+              "legendFormat": "{{pod}} Memory",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Container Memory Working Set",
+          "type": "timeseries"
+        }
+      ],
+      "refresh": "5s",
+      "schemaVersion": 39,
+      "tags": ["chaos-mesh", "kubernetes", "resilience", "sli"],
+      "time": { "from": "now-15m", "to": "now" },
+      "timepicker": {
+        "refresh_intervals": ["5s", "10s", "30s", "1m", "5m"]
+      },
+      "timezone": "browser",
+      "title": "Chaos Engineering & Resilience SLI Dashboard",
+      "uid": "chaos-resilience-sli",
+      "version": 1
+    }
+    
