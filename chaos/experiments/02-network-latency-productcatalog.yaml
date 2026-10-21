@@ -1,0 +1,22 @@
+apiVersion: chaos-mesh.org/v1alpha1
+kind: NetworkChaos
+metadata:
+  name: network-latency-productcatalog
+  namespace: chaos-mesh
+  labels:
+    app.kubernetes.io/part-of: chaos-engineering-platform
+    chaos.tier: catalog-service
+    experiment.type: network-chaos
+spec:
+  action: delay
+  mode: all
+  selector:
+    namespaces:
+      - online-boutique
+    labelSelectors:
+      app: productcatalogservice
+  delay:
+    latency: '250ms'
+    jitter: '15ms'
+  direction: to
+  duration: 60s
